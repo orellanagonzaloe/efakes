@@ -1,0 +1,8 @@
+*
+!*.py
+!README.md
+!lib
+!lib/*.py
+!.gitignore
+!config.yaml
+!fit_config.yaml

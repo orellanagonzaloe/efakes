@@ -1,0 +1,41 @@
+# Loop
+
+methods : ['TP', 'TT1', 'TT2']
+# methods : ['TP']
+
+eta_binning : [0. , 0.6 , 1.37 , 1.52 , 1.82 , 2.37]
+pt_binning : [75. , 90. , 145. , 300.]
+# eta_binning : [0. , 1.37 , 1.52, 2.37]
+# pt_binning : [25. , 300.]
+
+TP: 
+  cut_met_et : [0., 40.]
+  cut_el_pt_1 : [20., 125.]
+  cut_el_pt_2 : [125., 99999.]
+  cut_ph_pt : [125., 99999.]
+  cut_ph_iso : 2.45
+  cut_ph_trackiso : 0.05
+
+TT1:
+  cut_met_et : [0., 40.]
+  cut_el_pt_1 : [25., 99999.]
+  cut_el_pt_2 : [25., 99999.]
+  cut_ph_pt : [25., 99999.]
+  cut_ph_iso : 2.45
+  cut_ph_trackiso : 0.05
+  cut_mass : [86., 96.]
+
+TT2:
+  cut_met_et : [0., 40.]
+  cut_el_pt_1 : [25., 99999.]
+  cut_el_pt_2 : [25., 99999.]
+  cut_ph_pt : [25., 99999.]
+  cut_ph_iso : 2.45
+  cut_ph_trackiso : 0.05
+
+
+
+# FF
+
+
+eos_path_plots : '/eos/user/g/goorella/plots/efakes/'
