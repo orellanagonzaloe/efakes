@@ -24,6 +24,8 @@ TT1:
   cut_ph_iso : 2.45
   cut_ph_trackiso : 0.05
   cut_mass : [86., 96.]
+  cut_mass_up : [80., 100.]
+
 
 TT2:
   cut_met_et : [0., 40.]

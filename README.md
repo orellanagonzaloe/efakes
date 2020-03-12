@@ -31,14 +31,16 @@ Optional flags:
 
 
 
-## Systematic: reconstructed energy of the photon
+## Systematics:
 
-Alternative loops are needed to obtain this systematic (you need first to run the nominal loop (to use the same config.yaml), and obtain FFs (to get the alpha from TT2.yaml)).
+Alternative loops are needed to obtain some systematics (you need first to run the nominal loop (to use the same config.yaml), and obtain FFs (to get the alpha from TT2.yaml, only for TT2)).
 
-Runs up and down variation, with same config, only for TT2
+Runs up and down variation of the photon energy, with same config, only for TT2
 
 	python main.py --syst_energy /path/to/output/dir/
 
+Runs the mass window variation, with same config, only for TT1
 
+	python main.py --syst_masswin /path/to/output/dir/
 
 

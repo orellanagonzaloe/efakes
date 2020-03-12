@@ -154,8 +154,8 @@ class FitClass:
 		pconfig.LabelY = 0.8
 
 		l_param = ''
-		for i,p in enumerate(self.config[name]):
-			l_param += '#splitline{%s: %f}{' % ( p, fitFcn.GetParameter(i) )
+		for i in xrange(len(self.config[name])):
+			l_param += '#splitline{%s: %f}{' % ( fitFcn.GetParName(i), fitFcn.GetParameter(i) )
 		l_param += ' }'*len(self.config[name])
 		pconfig.LabelCustom = l_param
 		pconfig.LabelCustomX = 0.66

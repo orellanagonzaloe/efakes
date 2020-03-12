@@ -328,6 +328,8 @@ def output(h_grid, h_mass):
 	filename = 'output/%s/output_loop.root' % (cfg['tag'])
 	if cfg['syst_energy']:
 		filename = 'output/%s/output_loop_syst_energy_%s.root' % (cfg['tag'], str(cfg['alpha']))
+	if cfg['syst_masswin']:
+		filename = 'output/%s/output_loop_syst_masswin.root' % cfg['tag']
 	
 	op_file = TFile(filename, 'RECREATE')
 

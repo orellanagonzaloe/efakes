@@ -15,60 +15,93 @@ import lib.ff as ff
 
 def main():
 
-	if syst_energy is not None:
 
-		with open(syst_energy+'used_config.yaml', 'r') as f:
-			cfg = yaml.safe_load(f)
+	if len(input_loop)>0:
 
-		with open(syst_energy+'TT2.yaml', 'r') as f:
-			alph = yaml.safe_load(f)
-		if 'alpha_fake' not in alph:
-			print_msj('Alpha fake not found.', 1)
-			return 1
-		alpha_tmp = alph['alpha_fake']
+		if syst_energy:
 
-		cfg['syst_energy'] = True
-		cfg['methods'] = ['TT2']
+			with open(syst_energy+'used_config.yaml', 'r') as f:
+				cfg = yaml.safe_load(f)
 
-		cfg['alpha'] = 1+abs(1-alpha_tmp)
-		lp.init_loop(cfg)
+			with open(syst_energy+'TT2.yaml', 'r') as f:
+				alph = yaml.safe_load(f)
+			if 'alpha_fake' not in alph:
+				print_msj('Alpha fake not found', 1)
+				return 1
+			alpha_tmp = alph['alpha_fake']
 
-		print ''
+			cfg['syst_energy'] = True
+			cfg['methods'] = ['TT2']
 
-		cfg['alpha'] = 1-abs(1-alpha_tmp)
-		lp.init_loop(cfg)
+			cfg['alpha'] = 1+abs(1-alpha_tmp)
+			lp.init_loop(cfg)
 
-	elif len(input_loop)>0:
+			print ''
 
-		os.system('mkdir -p output/%s' % tag)
+			cfg['alpha'] = 1-abs(1-alpha_tmp)
+			lp.init_loop(cfg)
 
-		with open('config.yaml', 'r') as f:
-			cfg = yaml.safe_load(f)
+		elif syst_masswin:
 
-		cfg['path'] = input_loop
-		cfg['nevents'] = nevents
-		cfg['tag'] = tag
-		cfg['syst_energy'] = False
-		cfg['alpha'] = 1.
-		if len(methods)>0:
-			cfg['methods'] = methods
-		lp.init_loop(cfg)
+			with open(syst_masswin+'used_config.yaml', 'r') as f:
+				cfg = yaml.safe_load(f)
+
+			cfg['syst_masswin'] = True
+			cfg['methods'] = ['TT1']
+
+			cfg['TT1']['cut_mass'] = cfg['TT1']['cut_mass_up']
+			lp.init_loop(cfg)
+
+		else:
+
+			os.system('mkdir -p output/%s' % tag)
+
+			with open('config.yaml', 'r') as f:
+				cfg = yaml.safe_load(f)
+
+			cfg['path'] = input_loop
+			cfg['nevents'] = nevents
+			cfg['tag'] = tag
+			cfg['syst_energy'] = False
+			cfg['syst_masswin'] = False
+			cfg['alpha'] = 1.
+			if len(methods)>0:
+				cfg['methods'] = methods
+			lp.init_loop(cfg)
 
 	elif input_FF is not None:
 
-		with open(input_FF+'used_config.yaml', 'r') as f:
-			cfg = yaml.safe_load(f)
+		if syst_energy:
 
-		if len(methods)>0:
-			cfg['methods'] = methods
-			
-		h_grid, h_mass = ff.read_output(input_FF+'output_loop.root', cfg)
+			with open(input_FF+'used_config.yaml', 'r') as f:
+				cfg = yaml.safe_load(f)
 
-		cfg['output'] = input_FF
-		cfg['output_plots'] = outputplots + input_FF.split('/')[-2] + '/'
+			if len(methods)>0:
+				cfg['methods'] = methods
+				
+			h_grid, h_mass = ff.read_output(input_FF+'output_loop.root', cfg)
 
-		for m in cfg['methods']:
-			ff.get_FF(h_grid, h_mass, m, cfg)
+			cfg['output'] = input_FF
+			cfg['output_plots'] = outputplots + input_FF.split('/')[-2] + '/'
+
+			for m in cfg['methods']:
+				ff.get_FF(h_grid, h_mass, m, cfg)
+
+		else: 
+
+			with open(input_FF+'used_config.yaml', 'r') as f:
+				cfg = yaml.safe_load(f)
+
+			if len(methods)>0:
+				cfg['methods'] = methods
+				
+			h_grid, h_mass = ff.read_output(input_FF+'output_loop.root', cfg)
+
+			cfg['output'] = input_FF
+			cfg['output_plots'] = outputplots + input_FF.split('/')[-2] + '/'
+
+			for m in cfg['methods']:
+				ff.get_FF(h_grid, h_mass, m, cfg)
 
 
 
@@ -88,8 +121,8 @@ parser.add_argument('--input_FF', dest='input_FF', type=str, default=None)
 parser.add_argument('--tag', dest='tag', type=str, default='test_tag')
 parser.add_argument('--outputplots', dest='outputplots', type=str, default='/eos/user/g/goorella/plots/efakes/test_tag')
 parser.add_argument('--nevents', dest='nevents', type=int, default=None)
-parser.add_argument('--syst_energy', dest='syst_energy', type=str, default=None)
-# parser.add_argument('--alpha', dest='alpha', type=str, default=None)
+parser.add_argument('--syst_energy', dest='syst_energy', default=False)
+parser.add_argument('--syst_masswin', dest='syst_masswin', default=False)
 parser.add_argument('--methods', dest='methods', default=[], nargs='+')
 
 args = parser.parse_args()
@@ -101,9 +134,8 @@ tag = args.tag
 outputplots = args.outputplots
 nevents = args.nevents
 syst_energy = args.syst_energy
-# alpha = args.alpha
+syst_masswin = args.syst_masswin
 methods = args.methods
-
 
 for i in input_loop:
 	if i[-1] != '/':
@@ -112,8 +144,6 @@ if input_FF is not None and input_FF[-1] != '/':
 	input_FF += '/'
 if outputplots[-1] != '/':
 	outputplots += '/'
-if syst_energy is not None and syst_energy[-1] != '/':
-	syst_energy += '/'
 
 
 if __name__ == '__main__':
