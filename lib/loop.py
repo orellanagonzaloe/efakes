@@ -7,6 +7,7 @@ import glob
 import math
 import yaml
 import copy
+import sys
 from array import array 
 
 
@@ -88,7 +89,7 @@ def loop(h_grid, h_mass):
 	nevents = cfg['nevents']
 	if nevents is None:
 		nevents = chain.GetEntries()
-	print('Total events =  %i' % nevents)
+	print('\nTotal events =  %i' % nevents)
 
 	n_TP_ee = 0
 	n_TP_eg = 0
@@ -103,8 +104,11 @@ def loop(h_grid, h_mass):
 	for entry in xrange(nevents):
 
 
-		if entry % int(nevents/10) == 0:
-			print ('%i%%') % round(100.*entry/nevents)
+		# if entry % int(nevents/10) == 0:
+		# 	print ('%i%%') % round(100.*entry/nevents)
+
+		# progress_bar(entry, nevents)
+		print_progressbar('', nevents, entry)
 
 		chain.GetEntry(entry)
 
@@ -248,7 +252,7 @@ def output(h_grid, h_mass):
 	op_file.Close()
 
 
-	print ('%s was created' % filename)
+	print ('\n%s was created' % filename)
 
 	if not cfg['syst_energy'] and not cfg['syst_masswin']:
 
@@ -368,5 +372,13 @@ def inv_mass(pt1, eta1, phi1, pt2, eta2, phi2, mass2):
 
 
 
+def print_progressbar(name, total, progress):
 
-
+	bar_length, status = 50, ""
+	progress = float(progress) / float(total)
+	if progress >= 1.:
+		progress, status = 1, "\r\n"
+	block = int(round(bar_length * progress))
+	text = "\rProcessing {:2}  [{}] {:.0f}% {}".format(name, "#" * block + "-" * (bar_length - block), round(progress * 100, 0), status)
+	sys.stdout.write(text)
+	sys.stdout.flush()
