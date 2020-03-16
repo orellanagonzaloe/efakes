@@ -190,18 +190,14 @@ def loop(h_grid, h_mass):
 				if eta_bin is not None and pt_bin is not None:
 					h_mass['TT2_ee'][eta_bin][pt_bin].Fill(pair['TT2'][0])
 
+				h_mass['TT2_ee_all'].Fill(pair['TT2'][0])
+
 			elif pair['TT2'][1] == 'eg':
 
 				n_TT2_eg+=1
 
+				h_mass['TT2_eg_all'].Fill(pair['TT2'][0])
 
-	h_mass['TT2_ee_all'].Add(h_mass['TT1_ee']['EE'])
-	h_mass['TT2_ee_all'].Add(h_mass['TT1_ee']['BE'])
-	h_mass['TT2_ee_all'].Add(h_mass['TT1_ee']['BB'])
-
-	h_mass['TT2_eg_all'].Add(h_mass['TT1_eg']['EE'])
-	h_mass['TT2_eg_all'].Add(h_mass['TT1_eg']['BE'])
-	h_mass['TT2_eg_all'].Add(h_mass['TT1_eg']['BB'])
 
 
 	cfg['n_TP_ee'] = n_TP_ee
@@ -214,23 +210,68 @@ def loop(h_grid, h_mass):
 	output(h_grid, h_mass)
 	
 
+
+def output(h_grid, h_mass):
+
+	filename = '%s%s/output_loop.root' % (cfg['outputdir'], cfg['tag'])
+	if cfg['syst_energy']:
+		filename = '%s%s/output_loop_syst_energy_%s.root' % (cfg['outputdir'], cfg['tag'], str(cfg['alpha']))
+	if cfg['syst_masswin']:
+		filename = '%s%s/output_loop_syst_masswin.root' % (cfg['outputdir'], cfg['tag'])
+	
+	op_file = TFile(filename, 'RECREATE')
+
+	gStyle.SetOptStat(111111)
+
+
+	for t in ['ee', 'eg']:
+
+		h_grid[t]['TP'].Write('h_N_TP_'+t)
+		h_grid[t]['TT1_EE'].Write('h_N_TT1_EE_'+t)
+		h_grid[t]['TT1_BE'].Write('h_N_TT1_BE_'+t)
+		h_grid[t]['TT1_BB'].Write('h_N_TT1_BB_'+t)
+		h_grid[t]['TT2'].Write('h_N_TT2_'+t)
+
+		for r in ['EE', 'BE', 'BB']:
+			h_mass['TT1_'+t][r].Write('h_m_TT1_%s_%s'%(t, r))
+
+		for eta in xrange(len(cfg['eta_binning'])-1):
+			for pt in xrange(len(cfg['pt_binning'])-1):
+
+				h_mass['TP_'+t][eta][pt].Write('h_m_TP_'+t+'_%i_%i'%(eta, pt))
+				h_mass['TT2_'+t][eta][pt].Write('h_m_TT2_'+t+'_%i_%i'%(eta, pt))
+
+	h_mass['TT2_ee_all'].Write('h_m_TT2_ee_all')
+	h_mass['TT2_eg_all'].Write('h_m_TT2_eg_all')
+
+
+	op_file.Close()
+
+
+	print ('%s was created' % filename)
+
+	if not cfg['syst_energy'] and not cfg['syst_masswin']:
+
+		with open('output/' + cfg['tag'] +'/used_config.yaml', 'w+') as f:
+			data = yaml.dump(cfg, f)
+		print ('output/' + cfg['tag'] +'/used_config.yaml was created')
+
+
+
 def get_pair(el_n, el_pt, el_etas2, el_phi, el_ch, ph_n, ph_pt, ph_etas2, ph_phi, ph_iso, ph_trackiso, met_et):
 
 	pair = {}
 
 	Z_mass = 91.1876 # PDG
 
+	# piar mass, piar type, part1 eta, part1 pt, part2 eta, pert2 pt
+	pair['TP'] = [None] * 6
+	pair['TT1'] = [None] * 6
+	pair['TT2'] = [None] * 6
+
 	for m in cfg['methods']:
 
 		pair_mass = -999999999.
-
-		pair[m] = []
-		pair[m].append(None) 	# mass
-		pair[m].append(None)	# pair type
-		pair[m].append(None)	# part1 eta
-		pair[m].append(None)	# part1 pt
-		pair[m].append(None)	# part2 eta
-		pair[m].append(None)	# part2 pt
 
 		if met_et < cfg[m]['cut_met_et'][0] or met_et > cfg[m]['cut_met_et'][1]:
 			continue
@@ -288,6 +329,9 @@ def get_pair(el_n, el_pt, el_etas2, el_phi, el_ch, ph_n, ph_pt, ph_etas2, ph_phi
 
 	return pair
 
+
+
+
 def get_pair_region(eta1, eta2):
 
 	if eta1 < 1.475 and eta2 < 1.475:
@@ -323,100 +367,6 @@ def inv_mass(pt1, eta1, phi1, pt2, eta2, phi2, mass2):
 
 
 
-def output(h_grid, h_mass):
-
-	filename = 'output/%s/output_loop.root' % (cfg['tag'])
-	if cfg['syst_energy']:
-		filename = 'output/%s/output_loop_syst_energy_%s.root' % (cfg['tag'], str(cfg['alpha']))
-	if cfg['syst_masswin']:
-		filename = 'output/%s/output_loop_syst_masswin.root' % cfg['tag']
-	
-	op_file = TFile(filename, 'RECREATE')
-
-	gStyle.SetOptStat(111111)
 
 
-	for t in ['ee', 'eg']:
-
-		h_grid[t]['TP'].Write('h_N_TP_'+t)
-		h_grid[t]['TT1_EE'].Write('h_N_TT1_EE_'+t)
-		h_grid[t]['TT1_BE'].Write('h_N_TT1_BE_'+t)
-		h_grid[t]['TT1_BB'].Write('h_N_TT1_BB_'+t)
-		h_grid[t]['TT2'].Write('h_N_TT2_'+t)
-
-		for r in ['EE', 'BE', 'BB']:
-			h_mass['TT1_'+t][r].Write('h_m_TT1_%s_%s'%(t, r))
-
-		for eta in xrange(len(cfg['eta_binning'])-1):
-			for pt in xrange(len(cfg['pt_binning'])-1):
-
-				h_mass['TP_'+t][eta][pt].Write('h_m_TP_'+t+'_%i_%i'%(eta, pt))
-				h_mass['TT2_'+t][eta][pt].Write('h_m_TT2_'+t+'_%i_%i'%(eta, pt))
-
-	h_mass['TT2_ee_all'].Write('h_m_TT2_ee_all')
-	h_mass['TT2_eg_all'].Write('h_m_TT2_eg_all')
-
-
-	op_file.Close()
-
-
-	print ('%s was created' % filename)
-
-	if not cfg['syst_energy']:
-
-		with open('output/' + cfg['tag'] +'/used_config.yaml', 'w+') as f:
-			data = yaml.dump(cfg, f)
-		print ('output/' + cfg['tag'] +'/used_config.yaml was created')
-
-
-
-
-
-
-
-
-
-
-def print_event(chain, entry):
-
-	chain.GetEntry(entry)
-
-	jet_n = chain.jet_n
-
-	el_n = chain.el_medium_n
-	ph_n = chain.ph_noniso_n
-	el_pt = chain.el_medium_pt
-	el_etas2 = chain.el_medium_etas2
-	el_phi = chain.el_medium_phi
-	el_ch = chain.el_medium_ch
-
-	ph_pt = chain.ph_noniso_pt
-	ph_etas2 = chain.ph_noniso_etas2
-	ph_phi = chain.ph_noniso_phi
-	ph_iso = chain.ph_noniso_iso
-	ph_trackiso = chain.ph_noniso_trackiso
-
-	met_et = chain.met_et
-	ht = chain.ht
-
-	print 'Entry: %i' % entry
-	print 'el_n: %i' % el_n
-	for i in xrange(el_n):
-		print 'el %i:' % i,
-		print '\t el_pt: %f' % el_pt[i]
-		print '\t el_etas2: %f' % el_etas2[i]
-		print '\t el_phi: %f' % el_phi[i]
-		print '\t el_ch: %f' % el_ch[i]
-	print 'ph_n: %i' % ph_n
-	for i in xrange(ph_n):
-		print 'el %i:' % i,
-		print '\t ph_pt: %f' % ph_pt[i]
-		print '\t ph_etas2: %f' % ph_etas2[i]
-		print '\t ph_phi: %f' % ph_phi[i]
-		print '\t ph_iso: %f' % ph_iso[i]
-		print '\t ph_trackiso: %f' % ph_trackiso[i]
-	print 'jet_n: %i' % jet_n
-	print 'met_et: %f' % met_et
-	print 'ht: %f' % ht
-	print ''
 

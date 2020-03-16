@@ -22,6 +22,9 @@ def read_output(outputfile, cfg):
 	h_grid = {}
 	h_mass = {}
 
+	if not os.path.isfile(outputfile):
+		print_msj(outputfile + ' not found', 1)
+		return 1
 	file = TFile(outputfile)
 
 	for t in ['ee', 'eg']:
@@ -83,7 +86,7 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 	ff = {}
 
 
-	with open('fit_config.yaml', 'r') as f:
+	with open(cfg['fit_config'], 'r') as f:
 		fit_config = yaml.safe_load(f)
 
 	cl_fit = ft.FitClass()
@@ -154,10 +157,31 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 				ff[i_tmp]['FF_err_syst_w1'] = abs(ff[i_tmp]['FF']-ff[i_tmp]['FF_w1'])
 
 
-		f = open(cfg['output']+'TT1.yaml', 'w+')
-		yaml.dump(ff, f, default_flow_style=False)
-		f.close()
-		print (cfg['output']+'TT1.yaml was created')
+		if cfg['syst_masswin']:
+
+			with open(cfg['outputdir']+cfg['tag']+'/TT1.yaml', 'r') as f:
+				cfg_tmp = yaml.safe_load(f)
+
+			i_tmp = 0
+			for eta in xrange(1, len(cfg['eta_binning'])):
+				for pt in xrange(1, len(cfg['pt_binning'])):
+
+					i_tmp+=1
+
+					cfg_tmp[i_tmp]['FF_wmass'] = ff[i_tmp]['FF']
+					cfg_tmp[i_tmp]['FF_err_syst_wmass'] = abs(ff[i_tmp]['FF']-cfg_tmp[i_tmp]['FF'])
+
+			f = open(cfg['outputdir']+cfg['tag']+'/TT1.yaml', 'w+')
+			yaml.dump(cfg_tmp, f, default_flow_style=False)
+			f.close()
+			print (cfg['outputdir']+cfg['tag']+'/TT1.yaml was updated')
+
+		else:
+
+			f = open(cfg['outputdir']+cfg['tag']+'/TT1.yaml', 'w+')
+			yaml.dump(ff, f, default_flow_style=False)
+			f.close()
+			print (cfg['outputdir']+cfg['tag']+'/TT1.yaml was created')
 
 
 	else:
@@ -168,36 +192,38 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 		# cl_fit.bname = 'gauss'
 		# (sig, bkg, total, fitres) = cl_fit.generate_fit()
 
+		if mthd == 'TT2':
 
-		cl_fit.rng = (60., 300.)
-		cl_fit.sname = 'DSCB'
-		cl_fit.bname = 'poly'
-		cl_fit.hist = h_mass['TT2_ee_all']
-		if auto_N_fit:
-			name = cl_fit.hist.GetTitle()
-			maximum = cl_fit.hist.GetMaximum()
-			cl_fit.hist.GetXaxis().SetRangeUser(70., 110.)
-			minimum = cl_fit.hist.GetMinimum()
-			fit_config[name]['N'] = [6, maximum, maximum*0.8, maximum*1.2]
-			fit_config[name]['bkg0'] = [7, minimum, minimum*0.8, minimum*3.5]
-		cl_fit.config = fit_config
-		(sig, bkg, total, fitres) = cl_fit.generate_fit()
-		p0 = total.GetParameter(0)
-		ff['m0_ee_all'] = p0
+			cl_fit.rng = (60., 300.)
+			cl_fit.sname = 'DSCB'
+			cl_fit.bname = 'poly'
+			cl_fit.hist = h_mass['TT2_ee_all']
+			if auto_N_fit:
+				name = cl_fit.hist.GetTitle()
+				maximum = cl_fit.hist.GetMaximum()
+				cl_fit.hist.GetXaxis().SetRangeUser(70., 110.)
+				minimum = cl_fit.hist.GetMinimum()
+				fit_config[name]['N'] = [6, maximum, maximum*0.8, maximum*1.2]
+				fit_config[name]['bkg0'] = [7, minimum, minimum*0.8, minimum*3.5]
+			cl_fit.config = fit_config
+			(sig, bkg, total, fitres) = cl_fit.generate_fit()
+			p0 = total.GetParameter(0)
+			ff['m0_ee_all'] = p0
 
-		cl_fit.hist = h_mass['TT2_ee_all']
-		if auto_N_fit:
-			name = cl_fit.hist.GetTitle()
-			maximum = cl_fit.hist.GetMaximum()
-			cl_fit.hist.GetXaxis().SetRangeUser(70., 110.)
-			minimum = cl_fit.hist.GetMinimum()
-			fit_config[name]['N'] = [6, maximum, maximum*0.8, maximum*1.2]
-			fit_config[name]['bkg0'] = [7, minimum, minimum*0.8, minimum*3.5]
-		cl_fit.config = fit_config
-		(sig, bkg, total, fitres) = cl_fit.generate_fit()
-		p0 = total.GetParameter(0)
-		ff['m0_eg_all'] = p0
-		ff['alpha_fake'] = ff['m0_eg_all']/ff['m0_ee_all']
+			cl_fit.hist = h_mass['TT2_eg_all']
+			if auto_N_fit:
+				name = cl_fit.hist.GetTitle()
+				maximum = cl_fit.hist.GetMaximum()
+				cl_fit.hist.GetXaxis().SetRangeUser(70., 110.)
+				minimum = cl_fit.hist.GetMinimum()
+				fit_config[name]['N'] = [6, maximum, maximum*0.8, maximum*1.2]
+				fit_config[name]['bkg0'] = [7, minimum, minimum*0.8, minimum*3.5]
+			cl_fit.config = fit_config
+			(sig, bkg, total, fitres) = cl_fit.generate_fit()
+			p0 = total.GetParameter(0)
+			ff['m0_eg_all'] = p0
+			
+			ff['alpha_fake'] = ff['m0_eg_all']/ff['m0_ee_all']
 
 
 		i_tmp = 0
@@ -252,16 +278,40 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 				ff[i_tmp]['FF_err_syst_nobkg'] = abs(ff[i_tmp]['FF']-ff[i_tmp]['FF_nobkg'])
 
 
+		if cfg['syst_energy']:
 
-		f = open(cfg['output']+mthd+'.yaml', 'w+')
-		yaml.dump(ff, f, default_flow_style=False)
-		f.close()
-		print (cfg['output']+mthd+'.yaml was created')
+			with open(cfg['outputdir']+cfg['tag']+'/TT2.yaml', 'r') as f:
+				cfg_tmp = yaml.safe_load(f)
+
+			i_tmp = 0
+			for eta in xrange(1, len(cfg['eta_binning'])):
+				for pt in xrange(1, len(cfg['pt_binning'])):
+
+					i_tmp+=1
+
+					cfg_tmp[i_tmp]['FF_energy'] = ff[i_tmp]['FF']
+					cfg_tmp[i_tmp]['FF_err_syst_energy'] = abs(ff[i_tmp]['FF']-cfg_tmp[i_tmp]['FF'])
+
+			f = open(cfg['outputdir']+cfg['tag']+'/TT2.yaml', 'w+')
+			yaml.dump(cfg_tmp, f, default_flow_style=False)
+			f.close()
+			print (cfg['outputdir']+cfg['tag']+'/TT2.yaml was updated')
+
+		else:
+
+			f = open(cfg['outputdir']+cfg['tag']+'/TT2.yaml', 'w+')
+			yaml.dump(ff, f, default_flow_style=False)
+			f.close()
+			print (cfg['outputdir']+cfg['tag']+'/TT2.yaml was created')
 
 
-	with open(cfg['output']+'used_fit_config.yaml', 'w+') as f:
-		data = yaml.dump(fit_config, f)
-	print (cfg['output']+'used_fit_config.yaml was created')
+
+
+	if not cfg['syst_energy'] and not cfg['syst_masswin']:	
+
+		with open(cfg['outputdir']+cfg['tag']+'/used_fit_config.yaml', 'w+') as f:
+			data = yaml.dump(fit_config, f)
+		print (cfg['outputdir']+cfg['tag']+'/used_fit_config.yaml was created')
 
 
 
