@@ -53,3 +53,8 @@ Then run:
 	python main.py --getFF --config /path/to/used_config.yaml --systMassWin
 
 This will modify the previous YAML files including now this systematic.
+
+
+## TO DO:
+
+- Function to merge tags

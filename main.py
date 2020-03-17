@@ -36,15 +36,15 @@ def main():
 			print '\t Output Dir: %s' % cfg['outputdir'] + cfg['tag']
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
-			print '\t Alpha: %f' % cfg['alpha']
+			print '\t Alpha: %1.2f' % cfg['alpha']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
 			lp.init_loop(cfg)
 
-			print ''
-
 			cfg['alpha'] = 1-alpha
+
+			print '\n\t Alpha: %1.2f' % cfg['alpha']
 
 			lp.init_loop(cfg)
 
@@ -58,7 +58,7 @@ def main():
 			print '\t Output Dir: %s' % cfg['outputdir'] + cfg['tag']
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
-			print '\t Alpha: %f' % cfg['alpha']
+			print '\t Alpha: %1.2f' % cfg['alpha']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
@@ -80,7 +80,7 @@ def main():
 			print '\t Output Dir: %s' % cfg['outputdir'] + cfg['tag']
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
-			print '\t Alpha: %f' % cfg['alpha']
+			print '\t Alpha: %1.2f' % cfg['alpha']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
@@ -96,8 +96,7 @@ def main():
 
 			cfg['methods'] = 'TT2'
 			file = glob.glob(cfg['outputdir'] + cfg['tag'] + '/output_loop_syst_energy_*.root')
-
-			print cfg
+			file.sort()
 
 			h_grid, h_mass = ff.read_output(file[0], cfg)
 			cfg['output_plots'] = outputDirPlots + cfg['tag'] + '_syst_energy_%s/' % file[0].replace('.root','').split('_')[-1]
@@ -139,7 +138,7 @@ def check_args(args):
 
 	if args.loop and args.getFF:
 		return 1
-	if args.systEnergy and args.loop and alpha is None:
+	if args.systEnergy and args.loop and args.alpha is None:
 		return 1
 	if args.loop and len(args.inputFiles) == 0:
 		return 1

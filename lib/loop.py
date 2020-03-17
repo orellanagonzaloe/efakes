@@ -103,12 +103,9 @@ def loop(h_grid, h_mass):
 
 	for entry in xrange(nevents):
 
+		if entry % int(nevents/100) == 0:
+			print_progressbar('', nevents, entry)
 
-		# if entry % int(nevents/10) == 0:
-		# 	print ('%i%%') % round(100.*entry/nevents)
-
-		# progress_bar(entry, nevents)
-		print_progressbar('', nevents, entry)
 
 		chain.GetEntry(entry)
 
