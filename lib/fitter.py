@@ -21,6 +21,8 @@ from ROOT import *
 
 class FitClass:
 
+	YRange = None
+	XRange = None
 
 	def init(self):
 
@@ -94,6 +96,7 @@ class FitClass:
 		if not name in self.config:
 			print_msj('Using default fit config: '+name, 0)
 			name = 'default'
+			
 		for p in self.config[name]:
 
 			par = self.config[name][p]
@@ -136,11 +139,14 @@ class FitClass:
 		pconfig.XLabelSize = 0.05
 		pconfig.XTitleSize = 0.05
 		pconfig.XRangeUser = (self.rng[0] , self.rng[1])
+		if self.XRange is not None:
+			pconfig.XRangeUser = (self.XRange[0] , self.XRange[1])
 		pconfig.XTitleOffset = 0.8
 		pconfig.YTitle = 'Events'
 		pconfig.YLabelSize = 0.05
 		pconfig.YTitleSize = 0.05
-		# pconfig.YRangeUser = (0., 50.)
+		if self.YRange is not None:
+			pconfig.YRangeUser = (self.YRange[0], self.YRange[1])
 		pconfig.YTitleOffset = 0.95
 
 		pconfig.LegendX1 = 0.69
@@ -152,14 +158,6 @@ class FitClass:
 		pconfig.LabelData = 'Data, #sqrt{s} = 13 TeV, 139.0 fb^{-1}'
 		pconfig.LabelX = 0.15
 		pconfig.LabelY = 0.8
-
-		l_param = ''
-		for i in xrange(len(self.config[name])):
-			l_param += '#splitline{%s: %f}{' % ( fitFcn.GetParName(i), fitFcn.GetParameter(i) )
-		l_param += ' }'*len(self.config[name])
-		pconfig.LabelCustom = l_param
-		pconfig.LabelCustomX = 0.66
-		pconfig.LabelCustomY = 0.69
 
 		l_po = []
 
@@ -203,6 +201,18 @@ class FitClass:
 		po.LegendFill = 'l'
 		po.Draw = 'same'
 		l_po.append(po)
+
+		hp.plot_main(l_po, pconfig)
+
+
+		pconfig.Output = self.output + self.hist.GetTitle() + '_params.pdf'
+		l_param = ''
+		for i in xrange(len(self.config[name])):
+			l_param += '#splitline{%s: %f}{' % ( fitFcn.GetParName(i), fitFcn.GetParameter(i) )
+		l_param += ' }'*len(self.config[name])
+		pconfig.LabelCustom = l_param
+		pconfig.LabelCustomX = 0.7
+		pconfig.LabelCustomY = 0.62
 
 		hp.plot_main(l_po, pconfig)
 

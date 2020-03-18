@@ -89,6 +89,7 @@ def loop(h_grid, h_mass):
 	nevents = cfg['nevents']
 	if nevents is None:
 		nevents = chain.GetEntries()
+		cfg['nevents'] = nevents 
 	print('\nTotal events =  %i' % nevents)
 
 	n_TP_ee = 0
