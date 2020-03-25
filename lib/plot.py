@@ -23,11 +23,13 @@ sty_range = {
 	'pT' : (75., 300.),
 	'eta' : (0., 2.5),
 }
+
 sty_axis = {
 	'pT' : 'p_{T} [GeV]',
-	'eta' : '#eta',
+	'eta' : '|#eta|',
 }
 
+colors = [861, 810, 798, 878, 844, 404, 433, 607, 880, 425, 840, 820, 801]
 
 def read_FF(cfg, ff_res):
 
@@ -60,7 +62,7 @@ def read_FF(cfg, ff_res):
 			last_i = i
 
 		if len(x)>0:
-			l_ff_pt.append( (ROOT.TGraphErrors(len(cfg['pt_binning'])-1, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (ff_res[last_i]['eta'][0], ff_res[last_i]['eta'][1]) ) )
+			l_ff_pt.append( (ROOT.TGraphErrors(len(cfg['pt_binning'])-1, x, y, dx, dy), '#eta = [%1.2f-%1.2f]' % (ff_res[last_i]['eta'][0], ff_res[last_i]['eta'][1]) ) )
 
 
 	for j in xrange(1, len(cfg['pt_binning'])):
@@ -86,7 +88,7 @@ def read_FF(cfg, ff_res):
 
 			last_i = i
 
-		l_ff_eta.append( (ROOT.TGraphErrors(len(cfg['eta_binning'])-2, x, y, dx, dy), 'p_{T} = [%1.f - %1.f] GeV' % (ff_res[last_i]['pT'][0], ff_res[last_i]['pT'][1]) ) )
+		l_ff_eta.append( (ROOT.TGraphErrors(len(cfg['eta_binning'])-2, x, y, dx, dy), 'p_{T} = [%1.f-%1.f] GeV' % (ff_res[last_i]['pT'][0], ff_res[last_i]['pT'][1]) ) )
 
 
 	return l_ff_pt, l_ff_eta
@@ -135,9 +137,6 @@ def plot_FF(l_ff, comp = None, **kwargs):
 
 	l_po = []
 
-	colors = [861, 810, 798, 878, 844, 404, 433, 607, 880, 425, 840, 820, 801]
-
-
 	for i,p in enumerate(l_ff):
 
 		po = hp.PlotObject()
@@ -177,3 +176,41 @@ def plot_FF(l_ff, comp = None, **kwargs):
 
 
 	hp.plot_main(l_po, pconfig)
+
+
+def latex_table(cfg, ff_res, output = 'latex_table.tex'):
+
+	f = open(output, 'w+')
+
+	f.write('\\begin{table} \n')
+	f.write('\\begin{tabular}{ l l | c | c c c c | c } \n')
+	f.write('\\hline \n')
+	f.write('\\hline \n')
+	f.write('\\multirow{2}{*}{$|\\eta|$} & \\multirow{2}{*}{$p_{T}$[GeV]} & \\multirow{2}{*}{Fake factor} & Statistical & \\multicolumn{3}{c |}{Systematics Unc} & Total \\\\ \n')
+	f.write('\\cline{5-7} \n')
+	f.write(' & & & Unc & Integrating win & No bkg sustr & Energy bias & Unc\\\\ \n')
+	f.write('\\hline \n')
+	f.write('\\hline \n')
+
+	for j in xrange(len(cfg['eta_binning'])-1):
+
+		if ff_res[j*(len(cfg['pt_binning'])-1)+1]['eta'][0] >= 1.37 and ff_res[j*(len(cfg['pt_binning'])-1)+1]['eta'][0] < 1.52: 			continue
+
+		i_tmp = 0
+		for i in xrange(j*(len(cfg['pt_binning'])-1)+1, (j+1)*(len(cfg['pt_binning'])-1)+1):
+
+			line_tmp = ''
+			if i_tmp == 0:
+				line_tmp = '\\multirow{%i}{*}{%1.2f-%1.2f}' % (len(cfg['pt_binning'])-1, ff_res[i]['eta'][0], ff_res[i]['eta'][1])
+			line = '%s & %1.f-%1.f & %1.4f & %1.4f (%1.1f\\%%) & %1.4f (%1.1f\\%%) & %1.4f (%1.1f\\%%) & %1.4f (%1.1f\\%%) & %1.4f (%1.1f\\%%) \\\\ \n' % (line_tmp, ff_res[i]['pT'][0], ff_res[i]['pT'][1], ff_res[i]['FF'], ff_res[i]['FF_err_stat_2'], 100.*ff_res[i]['FF_err_stat_2']/ff_res[i]['FF'], ff_res[i]['FF_err_syst_win'], 100.*ff_res[i]['FF_err_syst_win']/ff_res[i]['FF'], ff_res[i]['FF_err_syst_nobkg'], 100.*ff_res[i]['FF_err_syst_nobkg']/ff_res[i]['FF'], ff_res[i]['FF_err_syst_energy'], 100.*ff_res[i]['FF_err_syst_energy']/ff_res[i]['FF'], ff_res[i]['FF_err_total'], 100.*ff_res[i]['FF_err_total']/ff_res[i]['FF'])
+			f.write(line)
+
+			i_tmp+=1
+
+		f.write('\\hline \n')
+
+	f.write('\\hline \n')
+	f.write('\\end{tabular} \n')
+	f.write('\\end{table} \n')
+
+	print output+' has been created'

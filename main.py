@@ -144,27 +144,28 @@ def main():
 
 		cfg['output_plots'] = outputDirPlots + cfg['tag'] + '/'
 
-		with open(FF[0], 'r') as f:
-			ff_res_TT1 = yaml.safe_load(f)
+		l_ff_pt = []
+		l_ff_eta = []
+		for i,f_tmp in enumerate(FF):
 
-		l_ff_pt_TT1, l_ff_eta_TT1 = plt.read_FF(cfg, ff_res_TT1)
+			with open(f_tmp, 'r') as f:
+				ff_res_m1 = yaml.safe_load(f)
 
-		with open(FF[1], 'r') as f:
-			ff_res_TT2 = yaml.safe_load(f)
+			l_ff_pt_tmp, l_ff_eta_tmp = plt.read_FF(cfg, ff_res_m1)
 
-		l_ff_pt_TT2, l_ff_eta_TT2 = plt.read_FF(cfg, ff_res_TT2)
+			l_ff_pt.append(l_ff_pt_tmp)
+			l_ff_eta.append(l_ff_eta_tmp)
 
-		plt.plot_FF(l_ff_pt_TT1, output = cfg['output_plots']+'FF_pt_TT1.pdf', var = 'pT')
-		plt.plot_FF(l_ff_eta_TT1, output = cfg['output_plots']+'FF_eta_TT1.pdf', var = 'eta')
-		plt.plot_FF(l_ff_pt_TT2, output = cfg['output_plots']+'FF_pt_TT2.pdf', var = 'pT')
-		plt.plot_FF(l_ff_eta_TT2, output = cfg['output_plots']+'FF_eta_TT2.pdf', var = 'eta')
+			plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_'+labels[i]+'.pdf', var = 'pT')
+			plt.plot_FF(l_ff_eta_tmp, output = cfg['output_plots']+'FF_eta_'+labels[i]+'.pdf', var = 'eta')
 
-		plt.plot_FF(l_ff_pt_TT2, output = cfg['output_plots']+'FF_pt_comp_TT2_TT1.pdf', var = 'pT', comp = l_ff_pt_TT1, comp_label = ('TT2', 'TT1'))
+			plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_comp_'+labels[i]+'_oTT1.pdf', var = 'pT', comp = old_ff, comp_label = (labels[i], 'Old TT1 (2018)'))
 
-		plt.plot_FF(l_ff_pt_TT1, output = cfg['output_plots']+'FF_pt_comp_nTT1_oTT1.pdf', var = 'pT', comp = old_ff, comp_label = ('New TT1', 'Old TT1 (2018)'))
+			# Only for TT2 *** need improvement
+			if i == 0:
+				plt.latex_table(cfg, ff_res_m1, output = cfg['outputdir'] + cfg['tag'] + '/latex_table_TT2.tex')
 
-		plt.plot_FF(l_ff_pt_TT2, output = cfg['output_plots']+'FF_pt_comp_TT2_oTT1.pdf', var = 'pT', comp = old_ff, comp_label = ('New TT2', 'Old TT1 (2018)'))
-
+		plt.plot_FF(l_ff_pt[0], output = cfg['output_plots']+'FF_pt_comp_'+labels[0]+'_'+labels[1]+'.pdf', var = 'pT', comp = l_ff_pt[1], comp_label = (labels[0], labels[1]))
 
 
 def check_args(args):
@@ -177,8 +178,8 @@ def check_args(args):
 		raise TypeError('You need to specify the files in inputFiles flag')
 	if len(args.methods) > 0 and ('TP' not in args.methods and 'TT1' not in args.methods and 'TT2' not in args.methods):
 		raise TypeError('Valid methods: TP, TT1 and TT2')
-	if args.plots and len(args.FF)<1:
-		raise TypeError('For plots you need to specify the ff results in FF flag')
+	if args.plots and len(args.FF)<1 and len(args.labels)<1:
+		raise TypeError('For plots you need to specify the ff results and labels')
 
 
 
@@ -227,8 +228,8 @@ parser.add_argument('--alpha', dest='alpha', type=float, default=None)
 parser.add_argument('--systMassWin', dest='systMassWin', action='store_true', default=False)
 
 parser.add_argument('--plots', dest='plots', action='store_true', default=False)
-
 parser.add_argument('--FF', dest='FF', default=[], nargs='+')
+parser.add_argument('--labels', dest='labels', default=[], nargs='+')
 
 args = parser.parse_args()
 check_args(args)
@@ -256,9 +257,8 @@ alpha = args.alpha
 systMassWin = args.systMassWin
 
 plots = args.plots
-
 FF = args.FF
-
+labels = args.labels
 
 for i in inputFiles:
 	if i[-1] != '/':

@@ -55,6 +55,8 @@ Then run:
 This will modify the previous YAML files including now this systematic.
 
 
-## TO DO:
+## Plots
 
-- Function to merge tags
+Create FF plots as a funciton |eta| and pT. You can include múltiple results, and you need to specify the labels. Also LaTeX table is created (for TT2 only).
+
+	python main.py --plots --FF /path/to/TT2.yaml /path/to/TT1.yaml --config /path/to/used_config.yaml --labels TT2 TT1

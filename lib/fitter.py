@@ -24,6 +24,8 @@ class FitClass:
 	YRange = None
 	XRange = None
 
+	extra = None
+
 	def init(self):
 
 		if self.sname == 'DSCB+gauss':
@@ -156,8 +158,18 @@ class FitClass:
 		pconfig.LegendTextSize = 0.035
 
 		pconfig.LabelData = 'Data, #sqrt{s} = 13 TeV, 139.0 fb^{-1}'
-		pconfig.LabelX = 0.15
+		pconfig.LabelX = 0.32
 		pconfig.LabelY = 0.8
+
+		pair_tpye = 'ee'
+		if '_eg_' in self.hist.GetTitle() :
+			pconfig.XTitle = 'm_{e\gamma} [GeV]'
+			pair_tpye = 'e\gamma'
+		if not 'all' in self.hist.GetTitle():
+			bin_eta = int(self.hist.GetTitle().split('.')[0].split('_')[4])
+			bin_pt = int(self.hist.GetTitle().split('.')[0].split('_')[5])
+			pconfig.LabelData2 = '%s  |#eta|: %1.2f-%1.2f  p_{T}: %1.f-%1.f GeV' % (pair_tpye, self.extra[0][bin_eta], self.extra[0][bin_eta+1], self.extra[1][bin_pt], self.extra[1][bin_pt+1])
+
 
 		l_po = []
 
@@ -176,13 +188,15 @@ class FitClass:
 
 
 		po = hp.PlotObject()
-		fitFcn.SetNpx(10000)
-		po.Object = fitFcn
-		po.LineColor = ROOT.kAzure-3
-		po.Legend = 'Global Fit'
+		backFcn.SetNpx(10000)
+		po.Object = backFcn
+		po.LineColor = ROOT.kSpring+9
+		po.Legend = 'Background Fit'
 		po.LegendFill = 'l'
 		po.Draw = 'same'
 		l_po.append(po)
+
+
 
 		po = hp.PlotObject()
 		signalFcn.SetNpx(10000)
@@ -193,13 +207,28 @@ class FitClass:
 		po.Draw = 'same'
 		l_po.append(po)
 
+
+
 		po = hp.PlotObject()
-		backFcn.SetNpx(10000)
-		po.Object = backFcn
-		po.LineColor = ROOT.kSpring+9
-		po.Legend = 'Background Fit'
+		fitFcn.SetNpx(10000)
+		po.Object = fitFcn
+		po.LineColor = ROOT.kAzure-3
+		po.Legend = 'Global Fit'
 		po.LegendFill = 'l'
 		po.Draw = 'same'
+		l_po.append(po)
+
+		po = hp.PlotObject()
+		fitFcn_cpy = fitFcn.Clone()
+		fitFcn_cpy.SetNpx(10000)
+		p0 = fitFcn.GetParameter(0)
+		p1 = fitFcn.GetParameter(1)
+		fitFcn_cpy.SetRange(p0-3*p1, p0+3*p1)
+		po.Object = fitFcn_cpy
+		po.LineColor = ROOT.kAzure-3
+		po.FillColorAlpha = (ROOT.kAzure-3, 0.4)
+		po.FillStyle = 1001
+		po.Draw = 'fc same'
 		l_po.append(po)
 
 		hp.plot_main(l_po, pconfig)
@@ -210,9 +239,9 @@ class FitClass:
 		for i in xrange(len(self.config[name])):
 			l_param += '#splitline{%s: %f}{' % ( fitFcn.GetParName(i), fitFcn.GetParameter(i) )
 		l_param += ' }'*len(self.config[name])
-		pconfig.LabelCustom = l_param
-		pconfig.LabelCustomX = 0.7
-		pconfig.LabelCustomY = 0.62
+		pconfig.LabelCustom2 = l_param
+		pconfig.LabelCustom2X = 0.7
+		pconfig.LabelCustom2Y = 0.62
 
 		hp.plot_main(l_po, pconfig)
 
