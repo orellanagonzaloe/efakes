@@ -46,6 +46,7 @@ def read_FF(cfg, ff_res):
 		if ff_res[j*(len(cfg['pt_binning'])-1)+1]['eta'][0] >= 1.37 and ff_res[j*(len(cfg['pt_binning'])-1)+1]['eta'][0] < 1.52: 			continue
 
 		last_i = None
+		
 		for i in xrange(j*(len(cfg['pt_binning'])-1)+1, (j+1)*(len(cfg['pt_binning'])-1)+1):
 
 			if ff_res[i]['FF']<1E-07: continue
@@ -114,12 +115,12 @@ def plot_FF(l_ff, comp = None, **kwargs):
 	pconfig.XTitle = sty_axis[kwargs['var']]
 	pconfig.XLabelSize = 0.05
 	pconfig.XTitleSize = 0.05
-	pconfig.XRangeUser = sty_range[kwargs['var']]
+	pconfig.XRange = sty_range[kwargs['var']]
 
 	pconfig.YTitle = 'FF'
 	pconfig.YLabelSize = 0.05
 	pconfig.YTitleSize = 0.05
-	pconfig.YRangeUser = (0., 0.15)
+	pconfig.YRange = (0., 0.15)
 	pconfig.YTitleOffset = 1.1
 
 	pconfig.LegendX1 = 0.52
@@ -159,20 +160,18 @@ def plot_FF(l_ff, comp = None, **kwargs):
 
 			po = hp.PlotObject()
 			po.Object = comp[i][0]
-			po.LineColor = colors[i]
+			po.LineColor = ROOT.kBlack
 			po.MarkerColor = colors[i]
 			po.FillColor = colors[i]
 			po.Legend = kwargs['comp_label'][1] + '  ' + comp[i][1]
 			po.LegendFill = 'lp'
 			po.Draw = 'EPZ same'
 			po.LineWidth = 2 
-			po.LineStyle = 2
+			# po.LineStyle = 2
 			po.MarkerStyle = 24
 			po.MarkerSize = 1.2
 
 			l_po.append(po)
-
-
 
 
 	hp.plot_main(l_po, pconfig)
@@ -214,3 +213,4 @@ def latex_table(cfg, ff_res, output = 'latex_table.tex'):
 	f.write('\\end{table} \n')
 
 	print output+' has been created'
+

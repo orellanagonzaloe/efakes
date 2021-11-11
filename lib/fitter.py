@@ -8,7 +8,7 @@ import math
 from array import array 
 
 import sys
-sys.path.append('/afs/cern.ch/user/g/goorella/harry_plotter')
+sys.path.append('/afs/cern.ch/user/g/goorella/projects/harry_plotter')
 import harry_plotter as hp
 
 import ROOT
@@ -90,8 +90,8 @@ class FitClass:
 
 		ZCanvas = ROOT.TCanvas('tmp_canvas')
 
-
-		fitFcn = ROOT.TF1('fitFcn', self.f_total, self.rng[0], self.rng[1], self.par_sig_n+self.par_bkg_n)
+		pycallable = self.f_total
+		fitFcn = ROOT.TF1('fitFcn', pycallable, self.rng[0], self.rng[1], self.par_sig_n+self.par_bkg_n)
 
 
 		name = self.hist.GetTitle()
@@ -107,8 +107,9 @@ class FitClass:
 			fitFcn.SetParameter(par[0], par[1])
 			fitFcn.SetParLimits(par[0], par[2], par[3])
 
+		ROOT.Math.MinimizerOptions.SetDefaultMaxFunctionCalls(10000)
 
-		fitRes = self.hist.Fit(fitFcn,self.fit_opt,'ep')
+		fitRes = self.hist.Fit(fitFcn, self.fit_opt, 'ep')
 
 		params = fitFcn.GetParameters()
 		signalFcn = ROOT.TF1('signalFcn', self.f_signal, self.rng[0], self.rng[1], self.par_sig_n)
@@ -140,15 +141,15 @@ class FitClass:
 		pconfig.XTitle = 'm_{ee} [GeV]'
 		pconfig.XLabelSize = 0.05
 		pconfig.XTitleSize = 0.05
-		pconfig.XRangeUser = (self.rng[0] , self.rng[1])
+		pconfig.XRange = (self.rng[0] , self.rng[1])
 		if self.XRange is not None:
-			pconfig.XRangeUser = (self.XRange[0] , self.XRange[1])
+			pconfig.XRange = (self.XRange[0] , self.XRange[1])
 		pconfig.XTitleOffset = 0.8
 		pconfig.YTitle = 'Events'
 		pconfig.YLabelSize = 0.05
 		pconfig.YTitleSize = 0.05
 		if self.YRange is not None:
-			pconfig.YRangeUser = (self.YRange[0], self.YRange[1])
+			pconfig.YRange = (self.YRange[0], self.YRange[1])
 		pconfig.YTitleOffset = 0.95
 
 		pconfig.LegendX1 = 0.69
@@ -161,11 +162,13 @@ class FitClass:
 		pconfig.LabelX = 0.32
 		pconfig.LabelY = 0.8
 
+
 		pair_tpye = 'ee'
 		if '_eg_' in self.hist.GetTitle() :
 			pconfig.XTitle = 'm_{e\gamma} [GeV]'
 			pair_tpye = 'e\gamma'
-		if not 'all' in self.hist.GetTitle():
+		tmp_char = ['all', 'EE', 'BE', 'BB']
+		if not any(x in self.hist.GetTitle() for x in tmp_char):
 			bin_eta = int(self.hist.GetTitle().split('.')[0].split('_')[4])
 			bin_pt = int(self.hist.GetTitle().split('.')[0].split('_')[5])
 			pconfig.LabelData2 = '%s  |#eta|: %1.2f-%1.2f  p_{T}: %1.f-%1.f GeV' % (pair_tpye, self.extra[0][bin_eta], self.extra[0][bin_eta+1], self.extra[1][bin_pt], self.extra[1][bin_pt+1])
@@ -191,7 +194,7 @@ class FitClass:
 		backFcn.SetNpx(10000)
 		po.Object = backFcn
 		po.LineColor = ROOT.kSpring+9
-		po.Legend = 'Background Fit'
+		po.Legend = 'Background'
 		po.LegendFill = 'l'
 		po.Draw = 'same'
 		l_po.append(po)
@@ -202,7 +205,7 @@ class FitClass:
 		signalFcn.SetNpx(10000)
 		po.Object = signalFcn
 		po.LineColor = ROOT.kPink
-		po.Legend = 'Signal Fit'
+		po.Legend = 'Signal'
 		po.LegendFill = 'l'
 		po.Draw = 'same'
 		l_po.append(po)
@@ -213,7 +216,7 @@ class FitClass:
 		fitFcn.SetNpx(10000)
 		po.Object = fitFcn
 		po.LineColor = ROOT.kAzure-3
-		po.Legend = 'Global Fit'
+		po.Legend = 'Signal+Bkg'
 		po.LegendFill = 'l'
 		po.Draw = 'same'
 		l_po.append(po)

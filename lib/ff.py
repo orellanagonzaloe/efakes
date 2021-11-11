@@ -92,7 +92,7 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 	cl_fit = ft.FitClass()
 	# cl_fit.config = fit_config
 	cl_fit.output = cfg['output_plots'] + 'fits/'
-	cl_fit.fit_opt = 'SERM0Q'
+	cl_fit.fit_opt = 'SERM0'
 
 	cl_fit.extra = (cfg['eta_binning'], cfg['pt_binning'])
 
@@ -185,36 +185,50 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 		# cl_fit.sname = 'DSCB+gauss'
 		# cl_fit.bname = 'gauss'
 		# cl_fit.hist = h_mass['TT2_eg'][4][2]
+		# cl_fit.YRange = None
 		# # cl_fit.YRange = (120., cl_fit.hist.GetMaximum())
 		# cl_fit.config = fit_config
 		# (sig, bkg, total, fitres) = cl_fit.generate_fit()
 
 
-		if mthd == 'TT2':
 
-			cl_fit.rng = (60., 300.)
-			cl_fit.sname = 'DSCB'
-			cl_fit.bname = 'gauss'
-			cl_fit.hist = h_mass['TT2_ee_all']
-			cl_fit.YRange = (120., cl_fit.hist.GetMaximum())
-			cl_fit.config = fit_config
-			(sig, bkg, total, fitres) = cl_fit.generate_fit()
-			p0 = total.GetParameter(0)
-			ff['m0_ee_all'] = p0
+		# if mthd == 'TT2':
 
-			cl_fit.hist = h_mass['TT2_eg_all']
-			cl_fit.YRange = (120., cl_fit.hist.GetMaximum())
-			cl_fit.config = fit_config
-			(sig, bkg, total, fitres) = cl_fit.generate_fit()
-			p0 = total.GetParameter(0)
-			ff['m0_eg_all'] = p0
+			# cl_fit.rng = (60., 300.)
+			# cl_fit.sname = 'DSCB+gauss'
+			# cl_fit.bname = 'gauss'
+			# cl_fit.hist = h_mass['TT2_ee_all']
+			# cl_fit.YRange = None
+			# cl_fit.config = fit_config
+			# (sig, bkg, total, fitres) = cl_fit.generate_fit()
+			# p0 = total.GetParameter(0)
+			# ff['m0_ee_all'] = p0
+
+			# print 'Fit Res: %i' % fitres
+			# fitres.Print()
+
+			# cl_fit.hist = h_mass['TT2_eg_all']
+			# cl_fit.YRange = None
+			# cl_fit.config = fit_config
+			# (sig, bkg, total, fitres) = cl_fit.generate_fit()
+			# p0 = total.GetParameter(0)
+			# ff['m0_eg_all'] = p0
+
+			# print fitres
+			# fitres.Print()
 			
-			ff['alpha_fake'] = ff['m0_eg_all']/ff['m0_ee_all']
+			# ff['alpha_fake'] = (ff['m0_eg_all']/ff['m0_ee_all'])**2
 
 
 		i_tmp = 0
 		for eta in xrange(len(cfg['eta_binning'])-1):
 			for pt in xrange(len(cfg['pt_binning'])-1):
+		# for eta in [0, 1, 2, 3, 4]:
+		# 	for pt in [2]:
+		# 		print_msj('Claculating only last bin of pT!!!', 0)
+
+
+				print '%s-%s, %s-%s' % (cfg['eta_binning'][eta], cfg['eta_binning'][eta+1], cfg['pt_binning'][pt], cfg['pt_binning'][pt+1])
 
 				i_tmp+=1
 
@@ -223,14 +237,12 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 				ff[i_tmp]['eta'] = [cfg['eta_binning'][eta], cfg['eta_binning'][eta+1]]
 				ff[i_tmp]['pT']  = [cfg['pt_binning'][pt], cfg['pt_binning'][pt+1]]
 
-
 				if h_mass[mthd+'_ee'][eta][pt].GetEntries() == 0 or h_mass[mthd+'_eg'][eta][pt].GetEntries() == 0:
 					k_tmp = '%s eta=[%1.2f-%1.2f]-pt=[%1.f-%1.f]' % (mthd, cfg['eta_binning'][eta], cfg['eta_binning'][eta+1], cfg['pt_binning'][pt], cfg['pt_binning'][pt+1])
 					print_msj('Empty histograms: '+k_tmp, 0)
 					ff[i_tmp]['FF'] = 0.
 					ff[i_tmp]['FF_err_total'] = 0.
 					continue
-
 
 				s_tmp = None
 				for t in ['ee', 'eg']:
@@ -244,6 +256,10 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 					cl_fit.config = fit_config
 					(sig, bkg, total, fitres) = cl_fit.generate_fit()
 
+					print 'Fit Res: %i' % fitres
+					fitres.Print()
+					sig_convMatx = fitres.GetCovarianceMatrix().GetSub(0, cl_fit.par_sig_1-1, 0, cl_fit.par_sig_1-1).GetMatrixArray()
+
 					p0 = total.GetParameter(0)
 					p1 = total.GetParameter(1)
 					ff[i_tmp]['m0_'+t] = p0
@@ -255,7 +271,7 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 					ff[i_tmp]['N_'+t+'_hist'] = h_mass[mthd+'_'+t][eta][pt].Integral(h_mass[mthd+'_'+t][eta][pt].FindFixBin(p0-3*s_tmp), h_mass[mthd+'_'+t][eta][pt].FindFixBin(p0+3*s_tmp), 'width')
 					ff[i_tmp]['N_'+t+'_nobkg'] = total.Integral(p0-3*s_tmp, p0+3*s_tmp)
 					ff[i_tmp]['N_'+t+'_sig']   = sig.Integral(p0-3*s_tmp, p0+3*s_tmp)
-					# ff[i_tmp]['N_'+t+'_sig_err'] = sig.IntegralError(p0-3*s_tmp, p0+3*s_tmp, fitres.GetParams(), fitres.GetCovarianceMatrix().GetMatrixArray())
+					ff[i_tmp]['N_'+t+'_sig_err'] = sig.IntegralError(p0-3*s_tmp, p0+3*s_tmp, fitres.GetParams(), sig_convMatx)
 					ff[i_tmp]['N_'+t+'_sig_w2']   = sig.Integral(p0-2*s_tmp, p0+2*s_tmp)
 					ff[i_tmp]['N_'+t+'_sig_w4']   = sig.Integral(p0-4*s_tmp, p0+4*s_tmp)
 
@@ -265,8 +281,8 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 				ff[i_tmp]['FF_w2']   = safeDiv(ff[i_tmp]['N_eg_sig_w2'], ff[i_tmp]['N_ee_sig_w2'])
 				ff[i_tmp]['FF_w4']   = safeDiv(ff[i_tmp]['N_eg_sig_w4'], ff[i_tmp]['N_ee_sig_w4'])
 				ff[i_tmp]['FF'] = safeDiv(ff[i_tmp]['N_eg_sig'], ff[i_tmp]['N_ee_sig'])
-				# ff[i_tmp]['FF_err_stat'] = ff[i_tmp]['FF']*math.sqrt( (ff[i_tmp]['N_eg_sig_err']/ff[i_tmp]['N_eg_sig'])**2 + (ff[i_tmp]['N_ee_sig_err']/ff[i_tmp]['N_ee_sig'])**2 )
-				ff[i_tmp]['FF_err_stat_2'] = ff[i_tmp]['FF']*math.sqrt( (safeDiv(1, ff[i_tmp]['N_eg_sig']))**2 + (safeDiv(1, ff[i_tmp]['N_ee_sig']))**2 )
+				ff[i_tmp]['FF_err_stat'] = ff[i_tmp]['FF']*math.sqrt( (ff[i_tmp]['N_eg_sig_err']/ff[i_tmp]['N_eg_sig'])**2 + (ff[i_tmp]['N_ee_sig_err']/ff[i_tmp]['N_ee_sig'])**2 )
+				ff[i_tmp]['FF_err_stat_2'] = ff[i_tmp]['FF']*math.sqrt(safeDiv(1, ff[i_tmp]['N_eg_sig']) + safeDiv(1, ff[i_tmp]['N_ee_sig']))
 				ff[i_tmp]['FF_err_syst_win']   = max([abs(ff[i_tmp]['FF']-ff[i_tmp]['FF_w2']), abs(ff[i_tmp]['FF']-ff[i_tmp]['FF_w2'])])
 				ff[i_tmp]['FF_err_syst_nobkg'] = abs(ff[i_tmp]['FF']-ff[i_tmp]['FF_nobkg'])
 
@@ -284,6 +300,8 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 
 				if 'FF_energy_dn' in cfg_tmp[i_tmp]:
 
+					cfg_tmp[i_tmp]['N_ee_energy_up'] = ff[i_tmp]['N_ee_sig']
+					cfg_tmp[i_tmp]['N_eg_energy_up'] = ff[i_tmp]['N_eg_sig']
 					cfg_tmp[i_tmp]['FF_energy_up'] = ff[i_tmp]['FF']
 					cfg_tmp[i_tmp]['FF_err_syst_energy'] = max([abs(cfg_tmp[i_tmp]['FF']-cfg_tmp[i_tmp]['FF_energy_up']), abs(cfg_tmp[i_tmp]['FF']-cfg_tmp[i_tmp]['FF_energy_dn'])])
 					cfg_tmp[i_tmp]['FF_err_total'] = math.sqrt(cfg_tmp[i_tmp]['FF_err_stat_2']**2 + cfg_tmp[i_tmp]['FF_err_syst_energy']**2 + cfg_tmp[i_tmp]['FF_err_syst_nobkg']**2 + cfg_tmp[i_tmp]['FF_err_syst_win']**2)
@@ -291,6 +309,8 @@ def get_FF(h_grid, h_mass, mthd, cfg):
 
 				else:
 
+					cfg_tmp[i_tmp]['N_ee_energy_dn'] = ff[i_tmp]['N_ee_sig']
+					cfg_tmp[i_tmp]['N_eg_energy_dn'] = ff[i_tmp]['N_eg_sig']
 					cfg_tmp[i_tmp]['FF_energy_dn'] = ff[i_tmp]['FF']
 
 

@@ -28,6 +28,7 @@ def init_loop(cfg_tmp):
 
 	h_grid = {}
 	h_mass = {}
+	h_dist = {}
 
 	for t in ['ee', 'eg']:
 
@@ -73,11 +74,31 @@ def init_loop(cfg_tmp):
 	h_mass['TT2_eg_all'].Sumw2(ROOT.kTRUE)
 
 
-	loop(h_grid, h_mass)
+	h_dist['TT2_ee_pt_e1'] = ROOT.TH1D('h_TT2_ee_pt_e1', 'h_TT2_ee_pt_e1', 60, 0., 300.)
+	h_dist['TT2_ee_pt_e1'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_ee_pt_e2'] = ROOT.TH1D('h_TT2_ee_pt_e2', 'h_TT2_ee_pt_e2', 60, 0., 300.)
+	h_dist['TT2_ee_pt_e2'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_eg_pt_e'] = ROOT.TH1D('h_TT2_eg_pt_e', 'h_TT2_eg_pt_e', 60, 0., 300.)
+	h_dist['TT2_eg_pt_e'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_eg_pt_g'] = ROOT.TH1D('h_TT2_eg_pt_g', 'h_TT2_eg_pt_g', 60, 0., 300.)
+	h_dist['TT2_eg_pt_g'].Sumw2(ROOT.kTRUE)
+
+	h_dist['TT2_ee_eta_e1'] = ROOT.TH1D('h_TT2_ee_eta_e1', 'h_TT2_ee_eta_e1', 60, -2.5, 2.5)
+	h_dist['TT2_ee_eta_e1'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_ee_eta_e2'] = ROOT.TH1D('h_TT2_ee_eta_e2', 'h_TT2_ee_eta_e2', 60, -2.5, 2.5)
+	h_dist['TT2_ee_eta_e2'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_eg_eta_e'] = ROOT.TH1D('h_TT2_eg_eta_e', 'h_TT2_eg_eta_e', 60, -2.5, 2.5)
+	h_dist['TT2_eg_eta_e'].Sumw2(ROOT.kTRUE)
+	h_dist['TT2_eg_eta_g'] = ROOT.TH1D('h_TT2_eg_eta_g', 'h_TT2_eg_eta_g', 60, -2.5, 2.5)
+	h_dist['TT2_eg_eta_g'].Sumw2(ROOT.kTRUE)
 
 
 
-def loop(h_grid, h_mass):
+	loop(h_grid, h_mass, h_dist)
+
+
+
+def loop(h_grid, h_mass, h_dist):
 
 	chain = TChain('mini')
 
@@ -89,7 +110,7 @@ def loop(h_grid, h_mass):
 	nevents = cfg['nevents']
 	if nevents is None:
 		nevents = chain.GetEntries()
-		cfg['nevents'] = nevents 
+		cfg['nevents'] = int(nevents)
 	print('\nTotal events =  %i' % nevents)
 
 	n_TP_ee = 0
@@ -110,28 +131,30 @@ def loop(h_grid, h_mass):
 
 		chain.GetEntry(entry)
 
-		el_n = chain.el_medium_n
-		ph_n = chain.ph_noniso_n
+		el_n = chain.el_n
+		ph_n = chain.ph_n
 
 
 		# small skim
 		if el_n < 1 or (el_n < 2 and ph_n < 1):
 			continue
 
-		# momentary using 'medium' branches
-		el_pt = chain.el_medium_pt
-		el_etas2 = chain.el_medium_etas2
-		el_phi = chain.el_medium_phi
-		el_ch = chain.el_medium_ch
+		el_pt = chain.el_pt
+		el_etas2 = chain.el_etas2
+		el_phi = chain.el_phi
+		el_ch = chain.el_ch
 
-		# momentary using 'noniso' branches
-		ph_pt = chain.ph_noniso_pt
-		ph_etas2 = chain.ph_noniso_etas2
-		ph_phi = chain.ph_noniso_phi
-		ph_iso = chain.ph_noniso_iso
-		ph_trackiso = chain.ph_noniso_trackiso
+		ph_pt = chain.ph_pt
+		ph_etas2 = chain.ph_etas2
+		ph_phi = chain.ph_phi
+		ph_iso = chain.ph_iso
+		ph_trackiso = chain.ph_trackiso
 
 		met_et = chain.met_et
+
+		# print_event(el_n, ph_n, el_pt, el_etas2, el_phi, el_ch, ph_pt, ph_etas2, ph_phi, ph_iso, ph_trackiso, met_et)
+
+
 
 		# systematic variation (missing MET variation)
 		for i in xrange(ph_n):
@@ -194,11 +217,26 @@ def loop(h_grid, h_mass):
 
 				h_mass['TT2_ee_all'].Fill(pair['TT2'][0])
 
+				if cfg['dist']:
+
+					h_dist['TT2_ee_eta_e1'].Fill(pair['TT2'][2])
+					h_dist['TT2_ee_pt_e1'].Fill(pair['TT2'][3])
+					h_dist['TT2_ee_eta_e2'].Fill(pair['TT2'][4])
+					h_dist['TT2_ee_pt_e2'].Fill(pair['TT2'][5])
+
+
 			elif pair['TT2'][1] == 'eg':
 
 				n_TT2_eg+=1
 
 				h_mass['TT2_eg_all'].Fill(pair['TT2'][0])
+
+				if cfg['dist']:
+
+					h_dist['TT2_eg_eta_e'].Fill(pair['TT2'][2])
+					h_dist['TT2_eg_pt_e'].Fill(pair['TT2'][3])
+					h_dist['TT2_eg_eta_g'].Fill(pair['TT2'][4])
+					h_dist['TT2_eg_pt_g'].Fill(pair['TT2'][5])
 
 
 
@@ -209,11 +247,11 @@ def loop(h_grid, h_mass):
 	cfg['n_TT2_ee'] = n_TT2_ee
 	cfg['n_TT2_eg'] = n_TT2_eg
 
-	output(h_grid, h_mass)
+	output(h_grid, h_mass, h_dist)
 	
 
 
-def output(h_grid, h_mass):
+def output(h_grid, h_mass, h_dist):
 
 	filename = '%s%s/output_loop.root' % (cfg['outputdir'], cfg['tag'])
 	if cfg['syst_energy']:
@@ -246,6 +284,16 @@ def output(h_grid, h_mass):
 	h_mass['TT2_ee_all'].Write('h_m_TT2_ee_all')
 	h_mass['TT2_eg_all'].Write('h_m_TT2_eg_all')
 
+	h_dist['TT2_ee_pt_e1'].Write('h_TT2_ee_pt_e1')
+	h_dist['TT2_ee_pt_e2'].Write('h_TT2_ee_pt_e2')
+	h_dist['TT2_eg_pt_e'].Write('h_TT2_eg_pt_e')
+	h_dist['TT2_eg_pt_g'].Write('h_TT2_eg_pt_g')
+
+	h_dist['TT2_ee_eta_e1'].Write('h_TT2_ee_eta_e1')
+	h_dist['TT2_ee_eta_e2'].Write('h_TT2_ee_eta_e2')
+	h_dist['TT2_eg_eta_e'].Write('h_TT2_eg_eta_e')
+	h_dist['TT2_eg_eta_g'].Write('h_TT2_eg_eta_g') 
+
 
 	op_file.Close()
 
@@ -254,9 +302,9 @@ def output(h_grid, h_mass):
 
 	if not cfg['syst_energy'] and not cfg['syst_masswin']:
 
-		with open('output/' + cfg['tag'] +'/used_config.yaml', 'w+') as f:
+		with open(cfg['outputdir'] + cfg['tag'] +'/used_config.yaml', 'w+') as f:
 			data = yaml.dump(cfg, f)
-		print ('output/' + cfg['tag'] +'/used_config.yaml was created')
+		print (cfg['outputdir'] + cfg['tag'] +'/used_config.yaml was created')
 
 
 
@@ -380,3 +428,29 @@ def print_progressbar(name, total, progress):
 	text = "\rProcessing {:2}  [{}] {:.0f}% {}".format(name, "#" * block + "-" * (bar_length - block), round(progress * 100, 0), status)
 	sys.stdout.write(text)
 	sys.stdout.flush()
+
+
+
+def print_event(el_n, ph_n, el_pt, el_etas2, el_phi, el_ch, ph_pt, ph_etas2, ph_phi, ph_iso, ph_trackiso, met_et):
+
+	print 'el_n: %f' % el_n
+	for i in xrange(el_n):
+		print i
+		print '\t pt: %f' % el_pt[i]
+		print '\t eta: %f' % el_etas2[i]
+		print '\t phi: %f' % el_phi[i]
+		print '\t ch: %f' % el_ch[i]
+
+	print 'ph_n: %f' % ph_n
+	for i in xrange(ph_n):
+		print i
+		print '\t pt: %f' % ph_pt[i]
+		print '\t eta: %f' % ph_etas2[i]
+		print '\t phi: %f' % ph_phi[i]
+		print '\t iso: %f' % ph_iso[i]
+		print '\t trackiso: %f' % ph_trackiso[i]
+
+	print 'met_et: %f' % met_et
+
+	print ''
+

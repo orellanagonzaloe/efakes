@@ -35,7 +35,8 @@ def main():
 		if systEnergy:
 
 			cfg['methods'] = ['TT2']
-			cfg['alpha'] = 1+alpha
+			cfg['alpha'] = 1-alpha
+			cfg['dist'] = False
 
 			print 'Running loop with:'
 			print '\t Tag: %s' % cfg['tag']
@@ -43,12 +44,13 @@ def main():
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
 			print '\t Alpha: %1.3f' % cfg['alpha']
+			print '\t Fill distributions: %r' % cfg['dist']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
 			lp.init_loop(cfg)
 
-			cfg['alpha'] = 1-alpha
+			cfg['alpha'] = 1+alpha
 
 			print '\n\t Alpha: %1.3f' % cfg['alpha']
 
@@ -58,6 +60,7 @@ def main():
 
 			cfg['methods'] = ['TT1']
 			cfg['TT1']['cut_mass'] = cfg['TT1']['cut_mass_up']
+			cfg['dist'] = False
 
 			print 'Running loop with:'
 			print '\t Tag: %s' % cfg['tag']
@@ -65,6 +68,7 @@ def main():
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
 			print '\t Alpha: %1.3f' % cfg['alpha']
+			print '\t Fill distributions: %r' % cfg['dist']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
@@ -87,6 +91,7 @@ def main():
 			print '\t Number of events: %s' % cfg['nevents']
 			print '\t Methods: %s' % ' '.join(cfg['methods'])
 			print '\t Alpha: %1.3f' % cfg['alpha']
+			print '\t Fill distributions: %r' % cfg['dist']
 			print '\t Syts Energy: %s' % cfg['syst_energy']
 			print '\t Syts Mass Win: %s' % cfg['syst_masswin']
 
@@ -159,13 +164,15 @@ def main():
 			plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_'+labels[i]+'.pdf', var = 'pT')
 			plt.plot_FF(l_ff_eta_tmp, output = cfg['output_plots']+'FF_eta_'+labels[i]+'.pdf', var = 'eta')
 
-			plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_comp_'+labels[i]+'_oTT1.pdf', var = 'pT', comp = old_ff, comp_label = (labels[i], 'Old TT1 (2018)'))
+			# plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_comp_'+labels[i]+'_oTT1.pdf', var = 'pT', comp = old_ff, comp_label = (labels[i], 'Old TT1 (2018)'))
+
+			# plt.plot_FF(l_ff_pt_tmp, output = cfg['output_plots']+'FF_pt_comp_'+labels[i]+'_v61.pdf', var = 'pT', comp = old_ff, comp_label = (labels[i], 'v61'))
 
 			# Only for TT2 *** need improvement
 			if i == 0:
 				plt.latex_table(cfg, ff_res_m1, output = cfg['outputdir'] + cfg['tag'] + '/latex_table_TT2.tex')
 
-		plt.plot_FF(l_ff_pt[0], output = cfg['output_plots']+'FF_pt_comp_'+labels[0]+'_'+labels[1]+'.pdf', var = 'pT', comp = l_ff_pt[1], comp_label = (labels[0], labels[1]))
+		# plt.plot_FF(l_ff_pt[0], output = cfg['output_plots']+'FF_pt_comp_'+labels[0]+'_'+labels[1]+'.pdf', var = 'pT', comp = l_ff_pt[1], comp_label = (labels[0], labels[1]))
 
 
 def check_args(args):
@@ -174,7 +181,7 @@ def check_args(args):
 		raise TypeError('loop and getFF flags cannot be used simultaneously')
 	if args.systEnergy and args.loop and args.alpha is None:
 		raise TypeError('systEnergy flah needs an alpha value')
-	if args.loop and len(args.inputFiles) == 0:
+	if args.loop and len(args.inputFiles) == 0 and not (args.systEnergy or args.systMassWin):
 		raise TypeError('You need to specify the files in inputFiles flag')
 	if len(args.methods) > 0 and ('TP' not in args.methods and 'TT1' not in args.methods and 'TT2' not in args.methods):
 		raise TypeError('Valid methods: TP, TT1 and TT2')
@@ -183,10 +190,11 @@ def check_args(args):
 
 
 
-old_ff = []
 
 x = array('f', [82.5, 117.5, 222.5])
 dx = array('f', [7.5, 27.5, 77.5])
+
+old_ff = []
 
 y = array('f', [0.011675, 0.0145507, 0.015021])
 dy = array('f', [0.00284385, 0.00355864, 0.00376375])
@@ -203,6 +211,24 @@ old_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (1
 y = array('f', [0.0534378, 0.0700488, 0.080176])
 dy = array('f', [0.00408191, 0.00528713, 0.00688721])
 old_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (1.82, 2.37)))
+
+v61_ff = []
+
+y = array('f', [0.0135, 0.0167, 0.0188])
+dy = array('f', [0.0011, 0.0015, 0.0012])
+v61_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (0.00, 0.60)))
+
+y = array('f', [0.0172, 0.0204, 0.0226])
+dy = array('f', [0.0012, 0.0017, 0.0018])
+v61_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (0.60, 1.37)))
+
+y = array('f', [0.0329, 0.0402, 0.0469])
+dy = array('f', [0.0022, 0.0028, 0.0041])
+v61_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (1.52, 1.82)))
+
+y = array('f', [0.0582, 0.0739, 0.0810])
+dy = array('f', [0.0035, 0.0043, 0.0051])
+v61_ff.append((ROOT.TGraphErrors(3, x, y, dx, dy), '#eta = [%1.2f ; %1.2f]' % (1.82, 2.37)))
 
 
 
@@ -276,9 +302,3 @@ if __name__ == '__main__':
 
 
 
-
-def print_msj(msj, level):
-
-	color = ['[1;93mWARNING', '[1;91mERROR']
-
-	print '\033%s\033[0m: %s' % (color[level], msj)
